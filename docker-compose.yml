@@ -63,7 +63,7 @@ services:
         - 5100:5100
       networks:
         - backend 
-      command: python3.10 main.py --config=configs/default.txt
+      command: python3.10 main.py --config=configs/local.txt
 
 networks:
   backend:

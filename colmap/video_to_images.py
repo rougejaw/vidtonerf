@@ -40,16 +40,17 @@ from random import sample
 #    2 = FileExistsError; happens when you try to create data in an already existing folder
 #    3 = FileNotFoundError; happens when you try to use an output folder that does not exist
 
-def split_video_into_frames(video_path, output_path, max_frames=200):
+def split_video_into_frames(video_path, output_path, max_frames=500, blur_check = False):
+  print("Here")
   ## determines whether image is blurry or not.
   # uses the variance of a laplacian transform to check for edges and returns true
   # if the variance is less than the threshold and the video is determined to be blurry
-  def is_blurry(image, THRESHOLD):
-    ## Convert image to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    ## run the variance of the laplacian transform to test blurriness
-    laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-    return laplacian_var < THRESHOLD
+  # def is_blurry(image, THRESHOLD):
+  #   ## Convert image to grayscale
+  #   gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  #   ## run the variance of the laplacian transform to test blurriness
+  #   laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+  #   return laplacian_var < THRESHOLD
 
   ## determines amount of blurriness
   # see IS_BLURRY for more information
@@ -73,47 +74,46 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   sample_count = min(frame_count,max_frames)
   print("SAMPLE COUNT:", sample_count)
 
-  #print(f"frames = {frame_count}")
-
   success, image = vidcap.read()
   img_height = image.shape[0]
   img_width = image.shape[1]
 
-  ## Rank all images based off bluriness
-  blur_list = []
-  ## check blurriness of all images and sort to caluculate threshold
-  while success:
-    image_blur = blurriness(image)
-    blur_list.append(image_blur)
-    success, image = vidcap.read()
+  if blur_check:
+    ## Rank all images based off bluriness
+    blur_list = []
+    ## check blurriness of all images and sort to caluculate threshold
+    while success:
+      image_blur = blurriness(image)
+      blur_list.append(image_blur)
+      success, image = vidcap.read()
 
-  vidcap.release()
-  sorted_list = sorted(blur_list)
-  ## we want the remaining best images
-  ## e.g, if we want 75 images out of 100, threshold should be 25th image
-  threshold_img = len(blur_list) - sample_count
-  THRESHOLD = sorted_list[threshold_img]
+    vidcap.release()
+    sorted_list = sorted(blur_list)
+    ## we want the remaining best images
+    ## e.g, if we want 75 images out of 100, threshold should be 25th image
+    threshold_img = len(blur_list) - sample_count
+    THRESHOLD = sorted_list[threshold_img]
 
-  ## checks number of images within the threshold
-  count_good_img = 0
-  for i in blur_list:
-    if i >= THRESHOLD:
-      count_good_img += 1
+    ## checks number of images within the threshold
+    count_good_img = 0
+    for i in blur_list:
+      if i >= THRESHOLD:
+        count_good_img += 1
 
-  ## account for not enough images in threshold so that we return the exact number of images
-  if count_good_img > sample_count:
-    for i in range(count_good_img - sample_count):
-      for val in blur_list:
-        if val >= THRESHOLD:
-          val = 0
-          break
-       
+    ## account for not enough images in threshold so that we return the exact number of images
+    if count_good_img > sample_count:
+      for i in range(count_good_img - sample_count):
+        for val in blur_list:
+          if val >= THRESHOLD:
+            val = 0
+            break
+        
 
-  ## If this threshold is too low, completely reject video 
-  avg_threshold = (sorted_list[-1] + THRESHOLD)/2
-  if avg_threshold < 100:
-    # ERROR: Video is too blurry. Please try again.
-    return 4
+    ## If this threshold is too low, completely reject video 
+    avg_threshold = (sorted_list[-1] + THRESHOLD)/2
+    if avg_threshold < 100:
+      # ERROR: Video is too blurry. Please try again.
+      return 4
   
 
   needs_adjust = False ## determines if we need to adjust
@@ -122,8 +122,8 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   #print (f"img_width: {img_width}")
   #print (f"img_height: {img_height}")
   ## adjust as necessaryx 
-  MAX_WIDTH = 200 
-  MAX_HEIGHT = 200
+  MAX_WIDTH = 400 
+  MAX_HEIGHT = 400
 
   ## for resizing images
   if (img_height > MAX_HEIGHT):
@@ -148,16 +148,31 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
 
   count = 0
+  img_idx = 0
 
   ## write to the folder the images we want
-  vidcap = cv2.VideoCapture(video_path)
-  success, image = vidcap.read()
+  #vidcap = cv2.VideoCapture(video_path)
+  #success, image = vidcap.read()
+  print(success)
+  #frame_count
+  #sample count
+  # if count % frame_count // sample_count == 0
   while success:
-    if (blur_list[count] >= THRESHOLD):
-      if (needs_adjust == True):
-        image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
-      cv2.imwrite(f"{output_path}/img_{count}.png", image)  
-      print('Saved image ', count)
+    if (blur_check):
+      if (blur_list[count] >= THRESHOLD):
+        print("heare")
+        if (needs_adjust == True):
+          image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
+        cv2.imwrite(f"{output_path}/img_{count:04}.png", image)  
+        print('Saved image ', count)
+    else:
+      if (count % (frame_count // sample_count) == 0):
+        if (needs_adjust == True):
+          image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
+        cv2.imwrite(f"{output_path}/img_{img_idx:04}.png", image)  
+        print('Saved image ', img_idx)
+        img_idx+=1
+
     success, image = vidcap.read()
     
     count += 1
@@ -172,7 +187,7 @@ def test():
   output_path = "test_out"
   ffmpeg_path = ""
   video_path = "landscape_video" # change to whatever vid you want
-  wanted_frames = 200
+  wanted_frames = 2001
   split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, wanted_frames)
 
 if __name__ == '__main__':

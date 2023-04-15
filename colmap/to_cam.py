@@ -37,7 +37,7 @@ class CameraPoseVisualizer:
         x-= 1.5
         y-= 1.5
         z-= 1.5
-        self.ax.voxels(x,y,z,data, facecolors=colors, edgecolors='grey')
+        #self.ax.voxels(x,y,z,data, facecolors=colors, edgecolors='grey')
         print('initialize camera pose visualizer')
 
     def extrinsic2pyramid(self, extrinsic, color='r', focal_len_scaled=1, aspect_ratio=0.3):
@@ -70,6 +70,21 @@ class CameraPoseVisualizer:
     
     def plot_cam(self, cam, color="blue"):
         self.ax.scatter(cam[0],cam[1],cam[2], color= color)
+
+    # Alex's function
+    def plot_ray(self, translation, origin=np.array([0.25,0.25,0]),color="gray"):
+        ## self.ax.scatter(translation[0], translation[1], translation[2], color="gray")
+        ## finding the "origin"
+
+        ## given an origin in camera space:
+        ## 
+        print("translation: (x,y,z) = ", translation[0], translation[1], translation[2])
+        print("origin: (x,y,z) = ", origin[0], origin[1], origin[2])
+
+        x = np.linspace(translation[0], origin[0], 100)
+        y = np.linspace(translation[1], origin[1], 100)
+        z = np.linspace(translation[2], origin[2], 100)
+        self.ax.plot(x, y, z, color=color)
 
 
     def show(self):
