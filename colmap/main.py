@@ -48,7 +48,7 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
     imgs_folder = os.path.join(output_path, "imgs")
     print(video_file_path)
 
-    split_video_into_frames(video_file_path, imgs_folder, 100)
+    split_video_into_frames(video_file_path, imgs_folder, 200)
     # imgs are now in output_data_dir/id
 
     # (2) colmap_runner.py
