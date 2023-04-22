@@ -11,6 +11,8 @@ if __name__ =='__main__':
     input_str = open(input_file)
     input = json.loads(input_str.read())
 
+
+    #TODO Make this input passed in, with default value 100
     CLUSTERS = 100
 
     extrins = []
@@ -53,15 +55,14 @@ if __name__ =='__main__':
     cluster_array = [ [] for _ in range(CLUSTERS) ]
     return_array = []
 
-    print(len(angles))
-
-
     for i in range(len(angles)):
         cluster_array[km[1][i]].append(i)
-        print(cluster_array[km[1][i]])
 
     #TODO instead of being completely random, take the point closest to the centroid
     for i in range(len(cluster_array)):
         return_array.append(cluster_array[i][random.randint(0,len(cluster_array[i])-1)])
 
     print(return_array)
+
+    with open("new_"+input_file, "w") as outfile:
+        json.dump(return_array, outfile, indent=4)

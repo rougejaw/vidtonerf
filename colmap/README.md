@@ -46,6 +46,16 @@ Quaternion can also be used to calculate the Euler angles which contains the rol
 ![My Image](projection_diagram.jpg)
 <sup>Source: https://www.sciencedirect.com/topics/engineering/intrinsic-parameter
 
+### Frame Sampling
+
+In order to ensure the samples passed into SfM include a variety of angles, a k-means sampling algorithm has been introduced.
+
+- Rectangular coordinates are passed in, then translate dinto spherical coordinates.
+- The angles of the points are compared and passed throu a k-means clustering algorithm, of n clusters. (default = 100)
+- A random point within each cluster is chosen for the sample, ensuring a better distribution of samples.
+- One wise optimization may be to sample the point closest to the center of each cluster rather than it be random.
+- These samples are turned into a json file within the directory and remain *unused* for the time being.
+
 ### Good Data Collection Tips
 - Try to take pictures/videos in a clean background that is not messy
 - Take structure in an environment that has opposing color to the structure itself
