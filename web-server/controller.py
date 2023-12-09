@@ -3,6 +3,7 @@ import os
 from pickle import TRUE
 #import magic
 from uuid import uuid4, UUID
+import threading
 
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
 
@@ -39,30 +40,24 @@ class WebServer:
     def add_routes(self) -> None:
 
         #TODO: Write error handling so the whole server doesn't crash when the user sends incorrect data.
+
+
+
         @self.app.route("/video", methods=["POST", "PUT"])
         def recv_video():
-            """
-            Must decide if we want to hang here until video is done,
-            or return a 20x received and let the front-end query an endpoint
-            given a cookie to see if the video is done periodically
-            """
             video_file = request.files.get("file")
-            print("VIDEO FILE", video_file)
-            # TODO: UUID4 is cryptographically secure on CPython, but this is not guaranteed in the specifications.
-            # Might want to change this.
-            # TODO: Don't assume videos are in mp4 format
-            uuid = self.cservice.handle_incoming_video(video_file)
-            if(uuid is None):
-                response = make_response("ERROR")
-                response.headers['Access-Control-Allow-Origin'] = '*'
-                return response
+            if video_file is None:
+                return make_response("No video file provided", 400)
             
-            # TODO: now pass to nerf/tensorf/colmap/sfm, and decide if synchronous or asynchronous
-            # will we use a db for cookies/ids?
-                
+            uuid = str(uuid4()) #still using uuid4 despite the fact it might not be the best
+
+            if not self.cservice.is_supported_format(video_file):
+                return make_response("Unsupported video format", 415)
+            threading.Thread(target=self.cservice.process_video, args=(video_file, uuid)).start() #IF EVERYTHING SUDDENLY BREAKS THIS IS WHY
+            self.cservice.store_video_status(uuid, "Processing")
+
             response = make_response(uuid)
             response.headers['Access-Control-Allow-Origin'] = '*'
-
             return response
 
         @self.app.route("/video/<vidid>", methods=["GET"])
