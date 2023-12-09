@@ -37,11 +37,17 @@ class WebServer:
 
         self.app.run(host=self.flaskip,port=self.args.port)
 
+
+
+    def handle_error(error_message, status_code=400):
+        response = make_response(error_message, status_code)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+
+
+
+
     def add_routes(self) -> None:
-
-        #TODO: Write error handling so the whole server doesn't crash when the user sends incorrect data.
-
-
 
         @self.app.route("/video", methods=["POST", "PUT"])
         def recv_video():
