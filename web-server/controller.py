@@ -32,10 +32,12 @@ class WebServer:
 
         self.add_routes()
         
-        # TODO: Change this to work based on where Flask server starts. Also, use the actual ip address
-        ### self.sserv.base_url = request.remote_addr
+        if hasattr(self.args, 'base_url'):
+            self.cservice.base_url = self.args.base_url
+        else:
+            self.cservice.base_url = f'http://{self.flaskip}:{self.args.port}'
 
-        self.app.run(host=self.flaskip,port=self.args.port)
+        self.app.run(host=self.flaskip, port=self.args.port)
 
 
 
@@ -73,6 +75,11 @@ class WebServer:
                 if(is_valid_uuid(vidid)):
                     path = os.path.join(os.getcwd(), "data/raw/videos/" + vidid + ".mp4")
                     response = make_response(send_file(path, as_attachment=True))
+
+                    if not os.path.exists(path):
+                        return make_response("Error: Video not found")
+                    response = make_response(send_file(path, as_attachment=True))
+                
                 else:
                     response = make_response("Error: invalid UUID")
             except Exception as e:
