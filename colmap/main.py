@@ -39,10 +39,7 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
     # run colmap and save data to custom directory
     # Create output directory under data/output_data_dir/id
     # TODO: use library to fix filepath joining
-    if not output_data_dir.endswith(("\\", "/")) and not id.startswith(("\\", "/")):
-        output_data_dir = output_data_dir + "/"
-    output_path = output_data_dir + id
-    Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
+
 
     # (1) vid_to_images.py
     imgs_folder = os.path.join(output_path, "imgs")
